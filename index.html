@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin-allow-popups">
+    <title>Box - Core Control Node</title>
+    <!-- Tailwind CSS v4 -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
+    <style>
+    @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
+    .animate-float { animation: float 4s ease-in-out infinite; }
+    .delay-200 { animation-delay: 0.2s; }
+    .delay-400 { animation-delay: 0.4s; }
+</style>
+</head>
+
+
+
+<div id="admin-lock-screen" class="fixed inset-0 z-[100] bg-slate-900 flex items-center justify-center">
+    <div class="bg-white p-10 rounded-3xl shadow-2xl text-center max-w-sm">
+        <span class="text-5xl mb-4 block">🛡️</span>
+        <h2 class="text-lg font-black text-slate-800">SYSTEM ACCESS REQUIRED</h2>
+        <p class="text-xs text-slate-500 mt-2 mb-6">Authorize your identity via Google Matrix.</p>
+        
+        <button id="admin-login-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-4 rounded-xl cursor-pointer">
+            🔑 Verify Admin Credentials
+        </button>
+    </div>
+</div>
+
+<div id="admin-content" class="hidden">
+    <h1>Welcome Admin!</h1>
+</div>
+
+
+<body class="bg-[#F1F5F9] text-[#334155] min-h-screen p-4 md:p-8">
+
+    <div class="max-w-6xl mx-auto space-y-6">
+        
+        <!-- HEADER BAR (Clean Glassmorphism) -->
+        <div class="bg-white/80 backdrop-blur-md border border-slate-200 p-6 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-sm">
+            <div>
+                <h1 class="text-2xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-sky-600 to-emerald-600">
+                    🔲 BOX SYSTEM CORE PANEL
+                </h1>
+                <p id="mode-indicator" class="text-xs text-amber-600 font-semibold mt-1 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded w-fit">🔄 Initializing Terminal...</p>
+            </div>
+            <button onclick="window.location.href='dashboard.html'" class="w-full sm:w-auto text-xs font-bold text-slate-600 hover:text-indigo-600 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 border border-slate-200 transition duration-150 active:scale-95 cursor-pointer text-center">
+                ← Back to Dashboard
+            </button>
+        </div>
+
+        <!-- 📈 CORE METRICS ROWS -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-xs">
+                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Core Assets</p>
+                <h3 id="stat-total" class="text-2xl font-black text-indigo-600 mt-1">0</h3>
+            </div>
+            <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-xs">
+                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">🎥 Video Logs</p>
+                <h3 id="stat-videos" class="text-2xl font-black text-sky-600 mt-1">0</h3>
+            </div>
+            <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-xs">
+                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">📄 PDF Catalogs</p>
+                <h3 id="stat-pdfs" class="text-2xl font-black text-violet-600 mt-1">0</h3>
+            </div>
+            <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-xs">
+                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">👥 Network Users</p>
+                <h3 id="stat-users" class="text-2xl font-black text-emerald-600 mt-1">0</h3>
+            </div>
+        </div>
+
+        <!-- MAIN SYSTEM GRID INTERFACE -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- LEFT PANEL: INJECTION ENGINE (4 Columns) -->
+            <div class="lg:col-span-4 bg-white border border-slate-200 p-6 rounded-2xl shadow-xs h-fit">
+                <h2 class="text-sm font-bold text-slate-700 mb-4 flex items-center gap-2">
+                    <span class="text-indigo-500">🚀</span> Deploy New Resource
+                </h2>
+
+                <!-- Lock Screen Authorization Frame -->
+                <div id="admin-lock-screen" class="text-center py-12 space-y-4 hidden border border-dashed border-slate-300 rounded-xl bg-slate-50">
+                    <span class="text-4xl block">🔒</span>
+                    <p class="text-xs text-slate-500 max-w-xs mx-auto px-4">Clearance Node Mapping Required. Verify identity matrix before system execution.</p>
+                    <button id="admin-login-btn" type="button" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition cursor-pointer shadow-sm shadow-indigo-200">
+                        🔑 Google Sign-In Verification
+                    </button>
+                    <p id="lock-status" class="text-xs text-rose-500 font-medium px-4"></p>
+                </div>
+
+                <!-- Input Sub-system form -->
+                <form id="resource-form" >
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Resource Structure</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button type="button" id="type-video" class="type-btn py-2 rounded-xl text-xs font-bold bg-indigo-50 text-indigo-600 border border-indigo-200 cursor-pointer text-center transition">🎥 Video Stream</button>
+                            <button type="button" id="type-pdf" class="type-btn py-2 rounded-xl text-xs font-bold bg-slate-50 text-slate-500 border border-slate-200 cursor-pointer text-center transition">📄 PDF Document</button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Resource Title</label>
+                        <input type="text" id="res-title" required placeholder="e.g., Advanced Penetration Framework" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition">
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Stream Domain / Category</label>
+                        <select id="res-category" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition">
+                            <option value="Tech">💻 Tech & Coding</option>
+                            <option value="Cybersecurity">🛡️ Cybersecurity</option>
+                            <option value="Academics">📚 College Academics</option>
+                            <option value="Books">📖 Books & PDF Hub</option>
+                        </select>
+                        <div class="mt-4">
+    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Sub-Category</label>
+    <select id="res-sub-category" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800">
+        <option value="">Select Sub-Category...</option>
+    </select>
+</div>
+                    </div>
+
+                    <div id="yt-id-wrapper">
+                        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">YouTube Video Link / ID</label>
+                        <input type="text" id="res-yt-id" placeholder="Paste full link or 11-char ID" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition">
+                    </div>
+
+                    <div id="pdf-url-wrapper" class="hidden">
+                        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Cloud PDF Data URL</label>
+                        <input type="url" id="res-file-url" placeholder="https://drive.google.com/..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition">
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">XP Allocation Weight</label>
+                        <input type="number" id="res-points" required value="30" min="5" max="100" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition">
+                    </div>
+
+                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-3 rounded-xl transition duration-150 active:scale-95 shadow-sm shadow-indigo-200 cursor-pointer text-center mt-2">
+                        🚀 Inject Resource Record
+                    </button>
+                </form>
+            </div>
+
+            <!-- RIGHT PANEL: TWO TABULAR MATRIX VIEWS (8 Columns) -->
+            <div class="lg:col-span-8 space-y-6">
+                
+                <!-- SUB PANEL A: LIVE RESOURCE REGISTRY -->
+                <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-xs flex flex-col h-[280px]">
+                    <h2 class="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
+                        <span class="text-sky-500">📊</span> Live Deployed Asset Registry
+                    </h2>
+                    <div class="overflow-y-auto flex-1 rounded-xl border border-slate-100 bg-slate-50/50">
+                        <table class="w-full text-left text-[11px] border-collapse">
+                            <thead>
+                                <tr class="bg-slate-100 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider sticky top-0">
+                                    <th class="p-2.5">Type</th>
+                                    <th class="p-2.5">Resource Details</th>
+                                    <th class="p-2.5">Reward</th>
+                                    <th class="p-2.5 text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="live-resource-table" class="divide-y divide-slate-100">
+                                <tr><td colspan="4" class="p-4 text-center text-slate-400">Loading data feed stream...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- SUB PANEL B: USER METRIC LOGS TERMINAL (NEW FEATURE) -->
+                <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-xs flex flex-col h-[280px]">
+                    <h2 class="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
+                        <span class="text-emerald-500">👥</span> Network User Account Registry Matrix
+                    </h2>
+                    <div class="overflow-y-auto flex-1 rounded-xl border border-slate-100 bg-slate-50/50">
+                        <table class="w-full text-left text-[11px] border-collapse">
+                            <thead>
+                                <tr class="bg-slate-100 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider sticky top-0">
+                                    <th class="p-2.5">User Identity Node</th>
+                                    <th class="p-2.5">Account Email Mapping</th>
+                                    <th class="p-2.5">Current Balance</th>
+                                    <th class="p-2.5 text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="live-users-table" class="divide-y divide-slate-100">
+                                <tr><td colspan="4" class="p-4 text-center text-slate-400">Listening to user pipeline...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="max-w-6xl mx-auto space-y-6 p-4">
+    <div class="bg-white p-6 rounded-2xl border shadow-sm">
+        <h1 class="text-xl font-black text-slate-800">⚙️ SYSTEM MASTER PANEL</h1>
+    </div>
+
+    <div class="bg-white p-6 rounded-2xl border">
+        <h2 class="text-sm font-bold mb-4 text-slate-700">👥 AUTHORIZED ADMINS</h2>
+        <div id="team-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-2xl border">
+        <h2 class="text-sm font-bold mb-4 text-slate-700">📂 CATEGORY ARCHITECTURE</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <select id="cat-icon-select" class="p-2 border rounded-lg text-xs">
+                <option value="fa-folder">📁 Default (Folder)</option>
+                <option value="fa-laptop-code">💻 Tech</option>
+                <option value="fa-microchip">🤖 AI/Electronics</option>
+                <option value="fa-book">📚 Academics</option>
+            </select>
+            <input type="text" id="cat-name" placeholder="Category Name" class="border p-2 rounded-lg text-xs w-full">
+            <input type="text" id="sub-cats" placeholder="Sub-categories (comma separated)" class="border p-2 rounded-lg text-xs w-full">
+            <button onclick="deployCategory()" class="bg-indigo-600 text-white p-2 rounded-lg text-xs font-bold w-full">DEPLOY CATEGORY</button>
+        </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-2xl border">
+        <h2 class="text-sm font-bold mb-4 text-slate-700">🔑 MANAGE ADMIN ACCESS</h2>
+        <div class="flex flex-col sm:flex-row gap-2">
+            <input type="email" id="new-admin-email" placeholder="New Admin Email" class="border p-2 rounded-lg text-xs w-full">
+            <button onclick="addAdmin()" class="bg-emerald-600 text-white px-6 rounded-lg text-xs font-bold whitespace-nowrap">ADD ADMIN</button>
+        </div>
+    </div>
+</div>
+<div class="bg-slate-900 p-8 rounded-3xl border border-slate-800 shadow-2xl">
+    <div class="flex items-center justify-between mb-10">
+        <h2 class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-violet-400">
+            👑 SYSTEM COMMANDERS
+        </h2>
+        <div class="h-1 w-20 bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full"></div>
+    </div>
+    
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+        
+        <div class="group relative bg-slate-800 p-6 rounded-3xl border border-slate-700 hover:border-indigo-500 transition-all duration-500 animate-float">
+            <div class="absolute inset-0 bg-gradient-to-br from-indigo-600/20 to-violet-600/20 opacity-0 group-hover:opacity-100 rounded-3xl transition-opacity"></div>
+            <img src="https://i.pinimg.com/736x/e7/05/12/e705120077589613fc869cfa8dc61d85.jpg" 
+                 class="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-slate-700 shadow-lg group-hover:border-indigo-400 transition-all duration-500">
+            <h3 class="text-sm font-bold text-white uppercase tracking-wider">Gaurav Yadav</h3>
+            <p class="text-[10px] text-indigo-400 font-black uppercase mt-1">Founder</p>
+        </div>
+
+        <div class="group relative bg-slate-800 p-6 rounded-3xl border border-slate-700 hover:border-violet-500 transition-all duration-500 animate-float delay-200">
+            <img src="https://ui-avatars.com/api/?name=Admin+Two&background=6366f1&color=fff" 
+                 class="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-slate-700 shadow-lg group-hover:border-violet-400 transition-all duration-500">
+            <h3 class="text-sm font-bold text-white uppercase tracking-wider">Aniruddh Yadav</h3>
+            <p class="text-[10px] text-violet-400 font-black uppercase mt-1">Manager</p>
+        </div>
+
+        <div class="group relative bg-slate-800 p-6 rounded-3xl border border-slate-700 hover:border-indigo-500 transition-all duration-500 animate-float delay-400">
+            <img src="https://ui-avatars.com/api/?name=Admin+Three&background=8b5cf6&color=fff" 
+                 class="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-slate-700 shadow-lg group-hover:border-indigo-400 transition-all duration-500">
+            <h3 class="text-sm font-bold text-white uppercase tracking-wider">Admin Three</h3>
+            <p class="text-[10px] text-indigo-400 font-black uppercase mt-1">Developer</p>
+        </div>
+
+        <div class="group relative bg-slate-800 p-6 rounded-3xl border border-slate-700 hover:border-violet-500 transition-all duration-500 animate-float delay-600">
+            <img src="https://ui-avatars.com/api/?name=Admin+Four&background=4f46e5&color=fff" 
+                 class="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-slate-700 shadow-lg group-hover:border-violet-400 transition-all duration-500">
+            <h3 class="text-sm font-bold text-white uppercase tracking-wider">Admin Four</h3>
+            <p class="text-[10px] text-violet-400 font-black uppercase mt-1">Support</p>
+        </div>
+
+    </div>
+</div>
+
+<div class="bg-white p-6 rounded-2xl border">
+    <h2 class="text-sm font-bold mb-4 text-slate-700">💎 XP REWARD SYSTEM</h2>
+    <div class="flex gap-2">
+        <input type="text" id="resource-id" placeholder="Resource ID" class="border p-2 rounded-lg text-xs w-full">
+        <input type="number" id="xp-value" placeholder="XP" class="border p-2 rounded-lg text-xs w-20">
+        <button onclick="updateXP()" class="bg-blue-600 text-white px-4 rounded-lg text-xs font-bold">UPDATE</button>
+    </div>
+</div>
+        <div class="bg-white p-6 rounded-2xl border">
+    <h2 class="text-sm font-bold mb-4 text-slate-700">🚨 REPORTED CONTENT</h2>
+    <div id="reports-grid" class="space-y-3">
+        </div>
+</div>
+
+<div id="feature-panel" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+    <h2 class="text-lg font-bold text-slate-800 mb-4">🛠 Advanced Control Panel</h2>
+    
+    <div class="grid grid-cols-3 gap-4 mb-6">
+        <div class="p-4 bg-indigo-50 rounded-xl">
+            <p class="text-[10px] text-indigo-600 font-bold">TOTAL WEB HITS</p>
+            <h3 id="stat-visits" class="text-2xl font-black">0</h3>
+        </div>
+        </div>
+
+    <div class="border-t pt-4">
+        <input type="text" id="team-name" placeholder="Member Name" class="border p-2 rounded w-full mb-2">
+        <input type="text" id="team-photo" placeholder="Photo URL" class="border p-2 rounded w-full mb-2">
+        <button onclick="addTeamMember()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg">Add to Team</button>
+    </div>
+</div>
+<div class="bg-white p-6 rounded-2xl border shadow-sm mt-4">
+    <h2 class="text-sm font-bold text-slate-700">🚨 MAINTENANCE MODE</h2>
+    <div class="flex items-center justify-between mt-4">
+        <p class="text-xs text-slate-500">Currently: <span id="m-status" class="font-bold">LIVE</span></p>
+        <button onclick="toggleMaintenance()" class="bg-rose-600 text-white px-4 py-2 rounded-lg text-xs font-bold">TOGGLE MAINTENANCE</button>
+    </div>
+</div>
+
+<footer class="mt-12 py-8 border-t border-slate-200">
+    <div class="max-w-6xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
+        
+        <div class="text-center md:text-left">
+            <h4 class="text-xs font-black text-slate-800">SYSTEM MASTER PANEL</h4>
+            <p class="text-[10px] text-slate-500 mt-1">© 2026 OpenWeb Core Infrastructure. All rights reserved.</p>
+        </div>
+         
+        <div class="flex gap-6">
+            <a href="dashboard.html" class="text-[10px] font-bold text-slate-600 hover:text-indigo-600 transition">Dashboard</a>
+            <a href="#" class="text-[10px] font-bold text-slate-600 hover:text-indigo-600 transition">Security Logs</a>
+            <a href="#" class="text-[10px] font-bold text-slate-600 hover:text-indigo-600 transition">Help Center</a>
+        </div>
+    </div>
+</footer>
+
+    <!-- Firebase Orchestration Layer -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+       // अपना पुराना import हटाकर यह वाला लिखें:
+import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, query, orderBy, where, getDocs,setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        const firebaseConfig = {
+            apiKey: "AIzaSyC-wugm5grs9NRv94xnrtODyF43JslKKnA",
+            authDomain: "openweb-7fedd.firebaseapp.com",
+            projectId: "openweb-7fedd",
+            storageBucket: "openweb-7fedd.firebasestorage.app",
+            messagingSenderId: "318160797964",
+            appId: "1:318160797964:web:1fe14036fb2a3eb8e3c929"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const provider = new GoogleAuthProvider();
+
+        let currentResourceType = 'video';
+
+        // ==========================================
+        // 🛠️ CONTROL ACCESS RULE SWITCH
+        // ==========================================
+     // 1. ईमेल की लिस्ट
+const ADMIN_EMAILS = [
+    "zzmtg1729@gmail.com", 
+    "aniruddh8358@gmail.com"
+];
+
+// 1. सबसे ऊपर, फंक्शन के बाहर ये वेरिएबल्स डिफाइन करें
+const lockScreen = document.getElementById('admin-lock-screen');
+const mainContent = document.getElementById('admin-content'); // या जो भी आपका ID है
+
+onAuthStateChanged(auth, (user) => {
+    console.log("लॉगिन यूजर:", user ? user.email : "None");
+    
+    if (user && ADMIN_EMAILS.includes(user.email)) {
+        console.log("मैच मिल गया! फॉर्म दिखा रहे हैं...");
+        
+        // 2. अब यहाँ lockScreen मौजूद होगा
+        if (lockScreen) {
+            lockScreen.style.display = 'none';
+        }
+        if (mainContent) {
+            mainContent.classList.remove('hidden');
+        }
+    } else {
+        console.log("एक्सेस डिनाइड।");
+    }
+});
+
+// एडमिन पेज पर लॉगिन बटन
+document.getElementById('admin-login-btn').addEventListener('click', async () => {
+    try {
+        await signInWithPopup(auth, provider);
+    } catch (err) {
+        alert("Login Error: " + err.message);
+    }
+});
+        document.getElementById('admin-login-btn').addEventListener('click', async () => {
+            try {
+                lockStatus.innerText = "Connecting handshake link layer...";
+                await signInWithPopup(auth, provider);
+            } catch (err) {
+                lockStatus.innerText = `Error: ${err.message}`;
+            }
+        });
+
+        function extractYouTubeID(urlOrId) {
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            const match = urlOrId.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : urlOrId.trim();
+        }
+
+        // 1️⃣ LISTEN TO VIDEOS/RESOURCES COLLECTION
+        const qResources = query(collection(db, "videos"), orderBy("timestamp", "desc"));
+        onSnapshot(qResources, (snapshot) => {
+            const tableBody = document.getElementById('live-resource-table');
+            tableBody.innerHTML = "";
+            let totalCount = 0, videoCount = 0, pdfCount = 0;
+
+            if (snapshot.empty) {
+                tableBody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400">No active assets registered.</td></tr>`;
+            } else {
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    totalCount++;
+                    if (data.resource_type === 'video') videoCount++;
+                    if (data.resource_type === 'pdf') pdfCount++;
+
+                    const badge = data.resource_type === 'video' 
+                        ? `<span class="bg-sky-50 text-sky-600 px-1.5 py-0.5 rounded font-bold border border-sky-200">🎥 VIDEO</span>`
+                        : `<span class="bg-violet-50 text-violet-600 px-1.5 py-0.5 rounded font-bold border border-violet-200">📄 PDF</span>`;
+
+                    const row = document.createElement('tr');
+                    row.className = "hover:bg-slate-100/50 transition";
+                    row.innerHTML = `
+                        <td class="p-2.5">${badge}</td>
+                        <td class="p-2.5 max-w-[220px] font-medium text-slate-700 truncate" title="${data.title}">${data.title}</td>
+                        <td class="p-2.5 font-mono font-bold text-slate-500">${data.points_reward} XP</td>
+                        <td class="p-2.5 text-center">
+                            <button data-id="${doc.id}" class="del-res-btn text-rose-500 hover:text-white bg-rose-50 hover:bg-rose-500 border border-rose-200 px-2 py-0.5 rounded text-[10px] font-semibold transition cursor-pointer">Remove</button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+
+                document.querySelectorAll('.del-res-btn').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        if (confirm("Terminate this resource record?")) {
+                            await deleteDoc(doc(db, "videos", e.target.getAttribute('data-id')));
+                        }
+                    });
+                });
+            }
+            document.getElementById('stat-total').innerText = totalCount;
+            document.getElementById('stat-videos').innerText = videoCount;
+            document.getElementById('stat-pdfs').innerText = pdfCount;
+        });
+
+        // 2️⃣ LISTEN TO USERS DATA PIPELINE (NEW FEATURE REAL-TIME INTEGRATION)
+        // **Note**: Apne main registration flow ke hisab se collection name match kar lena (Default: "users")
+        onSnapshot(collection(db, "users"), (snapshot) => {
+            const usersTable = document.getElementById('live-users-table');
+            usersTable.innerHTML = "";
+            let userCount = 0;
+
+            if (snapshot.empty) {
+                usersTable.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400">No synchronized user data logs found.</td></tr>`;
+            } else {
+                snapshot.forEach((doc) => {
+                    const uData = doc.data();
+                    userCount++;
+
+                    const row = document.createElement('tr');
+                    row.className = "hover:bg-slate-100/50 transition";
+                    row.innerHTML = `
+                        <td class="p-2.5 font-semibold text-slate-700 truncate max-w-[120px]">${uData.username || uData.name || 'Anonymous Node'}</td>
+                        <td class="p-2.5 font-mono text-slate-500 truncate max-w-[150px]">${uData.email || 'N/A'}</td>
+                        <td class="p-2.5 font-bold text-emerald-600">${uData.points || uData.xp || 0} XP</td>
+                        <td class="p-2.5 text-center">
+                            <button data-id="${doc.id}" class="del-user-btn text-amber-600 hover:text-white bg-amber-50 hover:bg-amber-500 border border-amber-200 px-2 py-0.5 rounded text-[10px] font-semibold transition cursor-pointer">Terminate</button>
+                        </td>
+                    `;
+                    usersTable.appendChild(row);
+                });
+
+                document.querySelectorAll('.del-user-btn').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        if (confirm("Are you sure you want to completely wipe out this user node profile?")) {
+                            try {
+                                await deleteDoc(doc(db, "users", e.target.getAttribute('data-id')));
+                                alert("User entry unlinked successfully.");
+                            } catch (err) {
+                                alert(`Error breaking user cluster: ${err.message}`);
+                            }
+                        }
+                    });
+                });
+            }
+            document.getElementById('stat-users').innerText = userCount;
+        });
+
+        // Dynamic Field Controls
+        document.getElementById('type-video').addEventListener('click', () => {
+            currentResourceType = 'video';
+            toggleTypeButtons('type-video', 'type-pdf');
+            document.getElementById('yt-id-wrapper').classList.remove('hidden');
+            document.getElementById('pdf-url-wrapper').classList.add('hidden');
+            document.getElementById('res-file-url').removeAttribute('required');
+        });
+
+        document.getElementById('type-pdf').addEventListener('click', () => {
+            currentResourceType = 'pdf';
+            toggleTypeButtons('type-pdf', 'type-video');
+            document.getElementById('yt-id-wrapper').classList.add('hidden');
+            document.getElementById('pdf-url-wrapper').classList.remove('hidden');
+            document.getElementById('res-file-url').setAttribute('required', 'true');
+        });
+
+        function toggleTypeButtons(activeId, inactiveId) {
+            document.getElementById(activeId).className = "type-btn py-2 rounded-xl text-xs font-bold bg-indigo-50 text-indigo-600 border border-indigo-200 cursor-pointer text-center transition";
+            document.getElementById(inactiveId).className = "type-btn py-2 rounded-xl text-xs font-bold bg-slate-50 text-slate-500 border border-slate-200 cursor-pointer text-center transition";
+        }
+
+        // Form Submit Handler
+        // ✅ UPDATED Form Submit Handler
+document.getElementById('resource-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const title = document.getElementById('res-title').value.trim();
+    const category = document.getElementById('res-category').value;
+    const subCategory = document.getElementById('res-sub-category').value; // ये नई फील्ड है
+    
+    const points_reward = parseInt(document.getElementById('res-points').value);
+    let yt_url_id = document.getElementById('res-yt-id').value.trim();
+    const file_url = document.getElementById('res-file-url').value.trim();
+
+    if (currentResourceType === 'video') {
+        yt_url_id = extractYouTubeID(yt_url_id);
+    }
+
+    const resourcePayload = {
+        title,
+        category,
+        subCategory, // इसे यहाँ ज़रूर लिखें, वरना फायरबेस में नहीं जाएगा
+        resource_type: currentResourceType,
+        points_reward,
+        yt_url_id: currentResourceType === 'video' ? yt_url_id : "",
+        file_url: currentResourceType === 'pdf' ? file_url : "",
+        timestamp: new Date()
+    };
+
+    try {
+        await addDoc(collection(db, "videos"), resourcePayload);
+        alert("Resource added successfully!");
+        document.getElementById('resource-form').reset();
+        // सब-कैटेगरी को वापस खाली कर दें
+        document.getElementById('res-sub-category').innerHTML = '<option value="">Select Sub-Category...</option>';
+    } catch (err) {
+        alert(`Insertion Exception: ${err.message}`);
+    }
+});
+
+        // TEAM RENDER
+        onSnapshot(collection(db, "team"), (snapshot) => {
+            const grid = document.getElementById('team-grid');
+            grid.innerHTML = "";
+            snapshot.forEach(doc => {
+                const member = doc.data();
+                grid.innerHTML += `<div class="p-3 border rounded-xl text-center"><img src="${member.photoUrl}" class="w-12 h-12 rounded-full mx-auto mb-2"><p class="text-[10px] font-bold">${member.name}</p></div>`;
+            });
+        });
+
+        window.deployCategory = async () => {
+    const catName = document.getElementById('cat-name').value.trim();
+    const newSubs = document.getElementById('sub-cats').value.split(',').map(s => s.trim());
+    const selectedIcon = document.getElementById('cat-icon-select').value; // आइकन पिक करना
+
+    const q = query(collection(db, "categories"), where("name", "==", catName));
+    const snapshot = await getDocs(q);
+    
+    if (!snapshot.empty) {
+        const docRef = snapshot.docs[0].ref;
+        const currentData = snapshot.docs[0].data();
+        const combinedSubs = [...new Set([...currentData.sub, ...newSubs])];
+        
+        await setDoc(docRef, { sub: combinedSubs, icon: selectedIcon }, { merge: true });
+        alert("Category updated!");
+    } else {
+        await addDoc(collection(db, "categories"), {
+            name: catName,
+            sub: newSubs,
+            icon: selectedIcon, // आइकन डेटाबेस में स्टोर हो रहा है
+            timestamp: new Date()
+        });
+        alert("New category created!");
+    }
+};
+
+
+
+const catSelect = document.getElementById('res-category');
+const subSelect = document.getElementById('res-sub-category');
+
+// 1. डेटाबेस से कैटेगरी लोड करें
+onSnapshot(collection(db, "categories"), (snapshot) => {
+    snapshot.forEach(doc => {
+        const catData = doc.data();
+        const exists = Array.from(catSelect.options).some(opt => opt.value === catData.name);
+        
+        if (!exists && catData.name) {
+            const option = document.createElement('option');
+            option.value = catData.name; // डेटाबेस से नाम लें
+            option.textContent = catData.name.trim(); // एक्स्ट्रा स्पेस हटा दें
+            catSelect.appendChild(option);
+        }
+    });
+});
+
+// 2. कैटेगरी बदलते ही सब-कैटेगरी लोड करें
+catSelect.addEventListener('change', async (e) => {
+    const selectedCat = e.target.value.trim(); 
+    subSelect.innerHTML = '<option value="">Select Sub-Category...</option>';
+    
+    if (!selectedCat) return;
+
+    // 1. पूरी 'categories' कलेक्शन को लाएं (बिना where के)
+    const querySnapshot = await getDocs(collection(db, "categories"));
+
+    // 2. मैन्युअली चेक करें
+    querySnapshot.forEach(doc => {
+        const data = doc.data();
+        const dbName = data.name ? data.name.trim() : ""; // डेटाबेस के नाम का स्पेस हटा दिया
+        
+        console.log(`Checking: "${dbName}" against "${selectedCat}"`); // यह कंसोल में दिखेगा
+
+        if (dbName === selectedCat) {
+            console.log("Match Found! Loading subs...");
+            if (data.sub && Array.isArray(data.sub)) {
+                data.sub.forEach(s => {
+                    const opt = document.createElement('option');
+                    opt.value = s;
+                    opt.textContent = s;
+                    subSelect.appendChild(opt);
+                });
+            }
+        }
+    });
+});
+
+        // ADD ADMIN
+        window.addAdmin = async () => {
+            const email = document.getElementById('new-admin-email').value;
+            await addDoc(collection(db, "admins"), { email });
+            alert("Admin added to Registry");
+        };
+
+
+        async function loadReports() {
+    const grid = document.getElementById('reports-grid');
+    const q = query(collection(db, "reports")); 
+    const snapshot = await getDocs(q);
+
+    grid.innerHTML = "";
+    snapshot.forEach((doc) => {
+        const report = doc.data();
+        const card = document.createElement('div');
+        card.className = "flex items-center justify-between p-3 border rounded-lg bg-red-50";
+        card.innerHTML = `
+            <div>
+                <p class="text-xs font-bold text-red-700">${report.reason}</p>
+                <p class="text-[9px] text-red-500">Reported by: ${report.reportedBy || 'Unknown'}</p>
+            </div>
+            <button onclick="deleteReportedPost('${report.postId}', '${doc.id}')" class="bg-red-500 text-white text-[10px] px-3 py-1 rounded">DELETE POST</button>
+        `;
+        grid.appendChild(card);
+    });
+}
+
+   window.updateXP = async () => {
+    const resId = document.getElementById('resource-id').value;
+    const newXP = parseInt(document.getElementById('xp-value').value);
+
+    if(!resId || isNaN(newXP)) return alert("सभी फील्ड भरें!");
+
+    try {
+        await setDoc(doc(db, "videos", resId), { points_reward: newXP }, { merge: true });
+        alert("XP सफलतापूर्वक अपडेट हो गया!");
+    } catch (e) {
+        alert("Error: " + e.message);
+    }
+};
+
+// कोड के बिल्कुल अंत में ये जोड़ें:
+document.addEventListener("DOMContentLoaded", () => {
+    loadReports(); // <--- यह लाइन बहुत ज़रूरी है
+});
+window.deleteReportedPost = async (postId, reportDocId) => {
+    if(!confirm("क्या आप वाकई इस पोस्ट को डिलीट करना चाहते हैं?")) return;
+    
+    try {
+        // ⚠️ ध्यान दें: यहाँ "videos" की जगह अपने उस कलेक्शन का नाम लिखें 
+        // जिसमें आपकी पोस्ट सेव है (जैसे: "posts" या जो भी आपने Dashboard में दिया है)
+        await deleteDoc(doc(db, "posts", postId)); 
+        
+        // रिपोर्ट को भी डिलीट करें
+        await deleteDoc(doc(db, "reports", reportDocId));
+        
+        alert("पोस्ट और रिपोर्ट डिलीट हो गई है।");
+        loadReports(); 
+    } catch(e) {
+        console.error("Delete Error:", e);
+        alert("Error: " + e.message + " - शायद पोस्ट इस कलेक्शन में नहीं है।");
+    }
+};
+
+// admin.html के JS में
+onSnapshot(doc(db, "analytics", "traffic"), (doc) => {
+    if (doc.exists()) {
+        document.getElementById('stat-visits').innerText = doc.data().total_visits;
+    }
+});
+
+window.addTeamMember = async () => {
+    const name = document.getElementById('team-name').value;
+    const photoUrl = document.getElementById('team-photo').value;
+    
+    await addDoc(collection(db, "team"), { name, photoUrl });
+    alert("Team member added!");
+};
+
+
+async function toggleMaintenance() {
+    const docRef = doc(db, "system", "settings");
+    const docSnap = await getDoc(docRef);
+    const currentMode = docSnap.data().maintenanceMode;
+    
+    await updateDoc(docRef, { maintenanceMode: !currentMode });
+    alert("System Mode Updated!");
+    location.reload();
+}
+    </script>
+</body>
+</html>
