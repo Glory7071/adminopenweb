@@ -121,6 +121,7 @@
         <option value="">Select Sub-Category...</option>
     </select>
 </div>
+<input type="number" id="res-order" placeholder="Order Index (1, 2, 3...)" required>
                     </div>
 
                     <div id="yt-id-wrapper">
@@ -203,21 +204,30 @@
         <div id="team-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             </div>
     </div>
-
-    <div class="bg-white p-6 rounded-2xl border">
-        <h2 class="text-sm font-bold mb-4 text-slate-700">📂 CATEGORY ARCHITECTURE</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <select id="cat-icon-select" class="p-2 border rounded-lg text-xs">
-                <option value="fa-folder">📁 Default (Folder)</option>
-                <option value="fa-laptop-code">💻 Tech</option>
-                <option value="fa-microchip">🤖 AI/Electronics</option>
-                <option value="fa-book">📚 Academics</option>
-            </select>
-            <input type="text" id="cat-name" placeholder="Category Name" class="border p-2 rounded-lg text-xs w-full">
-            <input type="text" id="sub-cats" placeholder="Sub-categories (comma separated)" class="border p-2 rounded-lg text-xs w-full">
-            <button onclick="deployCategory()" class="bg-indigo-600 text-white p-2 rounded-lg text-xs font-bold w-full">DEPLOY CATEGORY</button>
-        </div>
+<div class="bg-white p-6 rounded-2xl border shadow-sm">
+    <h2 class="text-sm font-bold mb-4 text-slate-700">📂 CATEGORY ARCHITECTURE</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <select id="cat-icon-select" class="p-2 border rounded-lg text-xs">
+            <option value="fa-folder">📁 Folder</option>
+            <option value="fa-laptop-code">💻 Tech</option>
+            <option value="fa-microchip">🤖 AI/Electronics</option>
+            <option value="fa-book">📚 Academics</option>
+            <option value="fa-pen-nib">✍️ Design</option>
+            <option value="fa-chart-line">📈 Business</option>
+            <option value="fa-music">🎵 Music</option>
+            <option value="fa-database">🗄️ Database</option>
+        </select>
+        <input type="text" id="cat-name" placeholder="Category Name" class="border p-2 rounded-lg text-xs w-full">
+        <input type="text" id="sub-cats" placeholder="Sub-cats (e.g. JS, React, Python)" class="border p-2 rounded-lg text-xs w-full">
+        <button onclick="deployCategory()" class="bg-indigo-600 text-white p-2 rounded-lg text-xs font-bold w-full">DEPLOY CATEGORY</button>
     </div>
+
+    <div class="mt-6 border-t pt-4">
+        <h3 class="text-xs font-bold text-slate-500 mb-3">EXISTING CATEGORIES:</h3>
+        <div id="category-list" class="space-y-2 overflow-y-auto" style="max-height: 250px;">
+    </div>
+    </div>
+</div>
 
     <div class="bg-white p-6 rounded-2xl border">
         <h2 class="text-sm font-bold mb-4 text-slate-700">🔑 MANAGE ADMIN ACCESS</h2>
@@ -328,7 +338,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
        // अपना पुराना import हटाकर यह वाला लिखें:
-import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, query, orderBy, where, getDocs,setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, query, orderBy, where, getDocs,setDoc, updateDoc,getDoc,arrayRemove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         const firebaseConfig = {
             apiKey: "AIzaSyC-wugm5grs9NRv94xnrtODyF43JslKKnA",
             authDomain: "openweb-7fedd.firebaseapp.com",
@@ -522,6 +532,7 @@ document.getElementById('resource-form').addEventListener('submit', async (e) =>
     const points_reward = parseInt(document.getElementById('res-points').value);
     let yt_url_id = document.getElementById('res-yt-id').value.trim();
     const file_url = document.getElementById('res-file-url').value.trim();
+    const orderIndex = parseInt(document.getElementById('res-order').value);
 
     if (currentResourceType === 'video') {
         yt_url_id = extractYouTubeID(yt_url_id);
@@ -535,6 +546,7 @@ document.getElementById('resource-form').addEventListener('submit', async (e) =>
         points_reward,
         yt_url_id: currentResourceType === 'video' ? yt_url_id : "",
         file_url: currentResourceType === 'pdf' ? file_url : "",
+        orderIndex: orderIndex,
         timestamp: new Date()
     };
 
@@ -584,8 +596,68 @@ document.getElementById('resource-form').addEventListener('submit', async (e) =>
         alert("New category created!");
     }
 };
+onSnapshot(collection(db, "categories"), (snapshot) => {
+    const list = document.getElementById('category-list');
+    if (!list) return;
+    
+    list.innerHTML = "";
+    snapshot.forEach(doc => {
+        const cat = doc.data();
+        
+        // 1. यहाँ आपका subCatsHTML तैयार होगा (यह वही कोड है जो आपने पूछा था)
+        let subCatsHTML = cat.sub ? cat.sub.map((sub) => `
+            <div class="flex justify-between items-center bg-white px-2 py-1 mt-1 rounded border text-[10px]">
+                <span>${sub}</span>
+                <button onclick="deleteSubCategory('${doc.id}', '${sub}')" class="text-rose-500 hover:text-rose-700 font-bold ml-2">✕</button>
+            </div>
+        `).join('') : "";
 
+        // 2. यहाँ हम div को भरेंगे
+        const div = document.createElement('div');
+        div.className = "p-3 bg-slate-50 rounded-lg border border-slate-200";
+        div.innerHTML = `
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid ${cat.icon || 'fa-folder'} text-indigo-500 text-xs"></i>
+                    <span class="text-xs font-bold">${cat.name}</span>
+                </div>
+                <button onclick="deleteCategory('${doc.id}')" class="text-rose-500 text-[10px] font-bold">DELETE CATEGORY</button>
+            </div>
+            <div class="mt-2 grid grid-cols-2 gap-1">
+                ${subCatsHTML}
+            </div>
+        `;
+        list.appendChild(div);
+    });
+});
 
+// 2. डिलीट फंक्शन
+// पूरी कैटेगरी को डिलीट करने के लिए
+window.deleteCategory = async (catId) => {
+    if (confirm("Warning: क्या आप वाकई यह पूरी कैटेगरी (और इसमें मौजूद सब-कैटेगरी) को डिलीट करना चाहते हैं?")) {
+        try {
+            await deleteDoc(doc(db, "categories", catId));
+            alert("पूरी कैटेगरी डिलीट हो गई!");
+        } catch (e) {
+            alert("Error: " + e.message);
+        }
+    }
+};
+
+// सब-कैटेगरी को डिलीट करने के लिए
+window.deleteSubCategory = async (catId, subName) => {
+    const docRef = doc(db, "categories", catId);
+    if (confirm(`क्या आप सब-कैटेगरी '${subName}' को हटाना चाहते हैं?`)) {
+        try {
+            await updateDoc(docRef, {
+                sub: arrayRemove(subName) // यह सीधे उस सब-कैटेगरी को हटा देगा
+            });
+            alert("सब-कैटेगरी हट गई!");
+        } catch (e) {
+            alert("Error: " + e.message);
+        }
+    }
+};
 
 const catSelect = document.getElementById('res-category');
 const subSelect = document.getElementById('res-sub-category');
@@ -718,15 +790,32 @@ window.addTeamMember = async () => {
 };
 
 
-async function toggleMaintenance() {
+// यह फंक्शन मेंटेनेंस मोड को टॉगल करेगा
+window.toggleMaintenance = async () => {
     const docRef = doc(db, "system", "settings");
-    const docSnap = await getDoc(docRef);
-    const currentMode = docSnap.data().maintenanceMode;
     
-    await updateDoc(docRef, { maintenanceMode: !currentMode });
-    alert("System Mode Updated!");
-    location.reload();
-}
+    try {
+        // 1. पहले वर्तमान स्थिति (current state) पता करें
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+            const currentMode = docSnap.data().maintenanceMode;
+            
+            // 2. स्थिति को उल्टा करें (true है तो false, false है तो true)
+            await updateDoc(docRef, {
+                maintenanceMode: !currentMode
+            });
+            
+            alert(`Maintenance Mode updated to: ${!currentMode ? "ON" : "OFF"}`);
+            location.reload(); // पेज रिफ्रेश करें ताकि स्टेटस अपडेट दिखे
+        } else {
+            alert("Error: Settings document not found!");
+        }
+    } catch (e) {
+        console.error("Error toggling maintenance:", e);
+        alert("Failed to toggle: " + e.message);
+    }
+};
     </script>
 </body>
 </html>
